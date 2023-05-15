@@ -1,0 +1,196 @@
+---
+title: "Lab2"
+author: "Tomohiro Justin Wada"
+date: "2023-02-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2movies)
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+data(movies)
+```
+
+# Question 1
+```{r}
+max(movies$year)
+min(movies$year)
+```
+
+# Question 2
+```{r}
+prop <- ((58788-sum(is.na(movies$budget)))/58788)*100
+prop
+naProp <- (sum(is.na(movies$budget))/58788)*100
+naProp
+topFive <- movies[order(movies$budget, decreasing = TRUE), ][1:5, ]
+topFive$title
+```
+8.87% of movies in the database have their budget included and 91.12% have no budget included in the database. The top 5 most expensive movie is "Spider-Man 2", "Titanic", "Troy", "Terminator 3: Rise of the Machines", and "Waterworld". 
+
+# Question 3
+```{r}
+top5_longest <- movies[order(movies$length, decreasing = TRUE), ][1:5, ]
+top5_longest$title
+
+```
+The top 5 longest movie is "Cure for Insomia", "The Longest Most Meaningless Movies in the World", "The Four Stars", "Resan", and "Out 1"
+
+# Question 4
+```{r}
+short <- movies[movies$Short == 1,]
+s <- short[which.min(short$length),]
+s
+
+short <- movies[movies$Short == 1,]
+s <- short[which.max(short$length),]
+s
+```
+The shortest length movie is 17 Seconds to Sophie and the longest is 10 jaar leuven kort
+
+# Question 5
+```{r}
+movGenre <- data.frame(Genre = c("Action", "Animation", "Comedy", "Drama", "Documentary","Romance","Short"), Frequency = c(sum(movies$Action), sum(movies$Animation), sum(movies$Comedy), sum(movies$Drama), sum(movies$Documentary), sum(movies$Romance), sum(movies$Short)))
+
+ggplot(movGenre, aes(x = Genre, y = Frequency))+ geom_bar(stat = "Identity", width= 0.7, fill="green")
+```
+
+# Question 6
+```{r}
+action <- movies[movies$Action == 1,]
+avgAction <- mean(action$rating)
+
+animation <- movies[movies$Animation == 1,]
+avgAnimation <- mean(animation$rating)
+
+comedy <- movies[movies$Comedy == 1,]
+avgComedy <- mean(comedy$rating)
+
+drama <- movies[movies$Drama == 1,]
+avgDrama <- mean(drama$rating)
+
+documentary <- movies[movies$Documentary == 1,]
+avgDocumentary <- mean(documentary$rating)
+
+romance <- movies[movies$Romance == 1,]
+avgRomance <- mean(romance$rating)
+
+short <- movies[movies$Short == 1,]
+avgShort <- mean(short$rating)
+
+movGenre <- data.frame(Genre = c("Action", "Animation", "Comedy", "Drama", "Documentary","Romance","Short"), Frequency = c(avgAction, avgAnimation, avgComedy, avgDrama, avgDocumentary, avgRomance, avgShort))
+
+ggplot(movGenre, aes(x = Genre, y = Frequency))+ geom_bar(stat = "Identity", width= 0.7, fill="green")
+```
+
+# Question 7
+```{r}
+action <- movies[movies$Action == 1,]
+actionYear <- action[action$year >= 2000 & action$year <= 2005,]
+avgAction <- mean(actionYear$rating)
+
+animation <- movies[movies$Animation == 1,]
+animationYear <- animation[animation$year >= 2000 & animation$year <= 2005,]
+avgAnimation <- mean(animationYear$rating)
+
+comedy <- movies[movies$Comedy == 1,]
+comedyYear <- comedy[comedy$year >= 2000 & comedy$year <= 2005,]
+avgComedy <- mean(comedyYear$rating)
+
+drama <- movies[movies$Drama == 1,]
+dramaYear <- drama[drama$year >= 2000 & drama$year <= 2005,]
+avgDrama <- mean(dramaYear$rating)
+
+documentary <- movies[movies$Documentary == 1,]
+documentaryYear <- documentary[documentary$year >= 2000 & documentary$year <= 2005,]
+avgDocumentary <- mean(documentaryYear$rating)
+
+romance <- movies[movies$Romance == 1,]
+romanceYear <- romance[romance$year >= 2000 & romance$year <= 2005,]
+avgRomance <- mean(romanceYear$rating)
+
+short <- movies[movies$Short == 1,]
+shortYear <- short[short$year >= 2000 & short$year <= 2005,]
+avgShort <- mean(shortYear$rating)
+
+movGenre <- data.frame(Genre = c("Action", "Animation", "Comedy", "Drama", "Documentary","Romance","Short"), Frequency = c(avgAction, avgAnimation, avgComedy, avgDrama, avgDocumentary, avgRomance, avgShort))
+
+ggplot(movGenre, aes(x = Genre, y = Frequency))+ geom_bar(stat = "Identity", width= 0.7, fill="green")
+```
+
+# Question 8
+```{r}
+Year <- 1990:2005
+movie <- movies[movies$year >= 1990,]
+
+ActionMovieYear <- movie[movie$Action == 1,]
+AnimationMovieYear <- movie[movie$Animation == 1,]
+ComedyMovieYear <- movie[movie$Comedy == 1,]
+DramaMovieYear <- movie[movie$Drama == 1,]
+DocumentaryMovieYear <- movie[movie$Documentary == 1,]
+RomanceMovieYear <- movie[movie$Romance == 1,]
+
+MovieGenre <- data.frame(Year = Year)
+
+MovieGenre <- MovieGenre %>%
+  group_by(Year) %>%
+  mutate(Action = sum(ActionMovieYear$year == Year),
+         Animation = sum(AnimationMovieYear$year == Year),
+         Comedy = sum(ComedyMovieYear$year == Year),
+         Drama = sum(DramaMovieYear$year == Year),
+         Documentary = sum(DocumentaryMovieYear$year == Year),
+         Romance = sum(RomanceMovieYear$year == Year)) %>%
+  gather(key = Genre, value = Frequency, -Year)
+
+
+ggplot(data = MovieGenre, aes(x = Year, y = Frequency, color = Genre)) +
+  geom_line() +
+  labs(x = "Year", y = "Frequency", color = "Genre")
+```
+
+# Question 9
+1) Which movie has the highest budget?
+```{r}
+max(movies$budget, na.rm=TRUE)
+```
+The highest movie budget is 200000000.
+
+2) What is the number of movies that have a budget greater than $1 million and have a rating greater than 5?
+```{r}
+sum(movies$budget > 1000000 & movies$rating > 5, na.rm=T)
+```
+The number of movies that have a budget greater than $1 million and have a rating greater than 5 is 2506 movies.
+
+3) Plot each movie genre budget. Which genre has the highest budget?
+```{r}
+action <- movies[movies$Action == 1,]
+avgAction <- sum(action$budget, na.rm=T)
+
+animation <- movies[movies$Animation == 1,]
+avgAnimation <- sum(animation$budget, na.rm=T)
+
+comedy <- movies[movies$Comedy == 1,]
+avgComedy <- sum(comedy$budget, na.rm=T)
+
+drama <- movies[movies$Drama == 1,]
+avgDrama <- sum(drama$budget, na.rm=T)
+
+documentary <- movies[movies$Documentary == 1,]
+avgDocumentary <- sum(documentary$budget, na.rm=T)
+
+romance <- movies[movies$Romance == 1,]
+avgRomance <- sum(romance$budget, na.rm=T)
+
+short <- movies[movies$Short == 1,]
+avgShort <- sum(short$budget, na.rm=T)
+
+movGenre <- data.frame(Genre = c("Action", "Animation", "Comedy", "Drama", "Documentary","Romance","Short"), Budget = c(avgAction, avgAnimation, avgComedy, avgDrama, avgDocumentary, avgRomance, avgShort))
+
+ggplot(movGenre, aes(x = Genre, y = Budget))+ geom_bar(stat = "Identity", width= 0.7, fill="green")
+```
+Drama has the highest the movie budget.
+
+
+

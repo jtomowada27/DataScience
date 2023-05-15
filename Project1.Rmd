@@ -1,0 +1,143 @@
+---
+title: "Project1"
+author: "Tomohiro Justin Wada"
+date: "2023-03-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, include=FALSE}
+library(tidyr)
+library(caret)
+library(leaps)
+library(Hmisc)
+library(olsrr)
+library(MASS)
+library(car)
+```
+
+## Background and problem definition
+We want to determine the best multiple variable model to best predict the 1/4 mile time using Miles per gallon(mpg), Displacement(disp), gross horsepower(hp), rear axle ratio(drat), and weight(wt).
+
+## Setup
+```{r, include=TRUE}
+data(mtcars)
+mydata <- mtcars[,c(7,1,3,4,5,6)]
+
+```
+No error or missing values within the data set.
+
+## Scatter Plots of QSEC VS HP
+```{r}
+plot(x = mtcars$hp, y = mtcars$qsec, main = "Scatterplot of QSEC VS HP",
+     xlab = "HP", ylab = "QSEC")
+```
+We see a moderate linear relationship between 1/4 mile time(qsec) and gross horsepower(hp) with moderate dispersion in the lower left region.
+
+## Scatter Plots of QSEC VS WT
+```{r}
+plot(x = mtcars$wt, y = mtcars$qsec, main = "Scatterplot of QSEC VS WT",
+     xlab = "WT", ylab = "QSEC")
+```
+We don't see a clear linear relationship between 1/4 mile time(qsec) and Weight(wt) with moderate disperation on the center left region.
+
+## Scatter Plots of QSEC VS DISP
+```{r}
+plot(x = mtcars$disp, y = mtcars$qsec, main = "Scatterplot of QSEC VS DISP",
+     xlab = "DISP", ylab = "QSEC")
+```
+We see a moderate linear relationship between 1/4 mile time(qsec) and displacement with moderate dispersion in the left region. 
+
+## Scatter Plots of QSEC VS DRAT
+```{r}
+plot(x = mtcars$drat, y = mtcars$qsec, main = "Scatterplot of QSEC VS DRAT",
+     xlab = "DRAT", ylab = "QSEC")
+```
+We see no linear relationship between 1/4 mile time(qsec) and rear axle ration (drat) with random dispersion.
+
+## Scatter Plots of QSEC VS MPG
+```{r}
+plot(x = mtcars$mpg, y = mtcars$qsec, main = "Scatterplot of QSEC VS MPG",
+     xlab = "MPG", ylab = "QSEC")
+```
+We can see a slight linear relationship between 1/4 mile time(qsec) and miles per gallon(mpg) with moderate dispersion in the center region.
+
+## Correlation Matrix
+```{r, include=TRUE}
+mydata.rcorr = rcorr(as.matrix(mydata))
+mydata.rcorr
+```
+We can from the correlation matrix, that only hp is signicant. But we will see down on that wt(weight) and disp(displacement) is significant to the overall model.
+
+## Stepwise AIC Variable Selection
+```{r}
+model <- lm(mtcars$qsec ~ mtcars$hp + mtcars$wt + mtcars$disp + mtcars$drat + mtcars$mpg
+            , data = mtcars)
+ols_step_forward_aic(model, details = TRUE)
+```
+From the five variables, the selection process decides not to include mpg(miles per gallon) and drat(rear axle ratio) into the final model as it was not significant. But if we see the significance column we see that disp is not significant either.
+
+## Interaction Terms
+```{r}
+InteractionModel <- lm(mtcars$qsec ~ mtcars$hp + mtcars$wt + mtcars$disp  + 
+                         mtcars$hp*mtcars$wt + mtcars$hp*mtcars$disp + mtcars$wt*mtcars$disp,
+                          data = mtcars)
+summary(InteractionModel)
+```
+From the summary, we see that the adjused R-squred is 0.6531 including disp. Let's see without disp.
+
+# Interation Terms test 2
+```{r}
+InteractionModel <- lm(mtcars$qsec ~ mtcars$hp + mtcars$wt + 
+                         mtcars$hp*mtcars$wt,
+                          data = mtcars)
+summary(InteractionModel)
+```
+From the summary, we see that the new adjusted R-squared is 0.6148, lower than previously. This shows that disp(displacement) is important to the overall model.
+# Quadratic Terms
+```{r}
+sqHP <- mtcars$hp^2
+sqWT <- mtcars$wt^2
+sqDISP <- mtcars$disp^2
+QuadraticModel <- lm(mtcars$qsec ~ mtcars$hp + mtcars$wt + mtcars$disp + sqHP + sqWT + sqDISP,
+                          data = mtcars)
+summary(QuadraticModel)
+```
+From the summary, we acheive a adjusted R-squared value of 0.6628. Lets see without disp in the quadratic test.
+# Quadratic Test2
+```{r}
+sqHP <- mtcars$hp^2
+sqWT <- mtcars$wt^2
+QuadraticModel <- lm(mtcars$qsec ~ mtcars$hp + mtcars$wt + sqHP + sqWT,
+                          data = mtcars)
+summary(QuadraticModel)
+```
+We can see that for the quadratic test, it does increase the adjusted R-squared value but we will see that for the best adjusted R-squared value includes disp.
+
+## Multicollinearity
+```{r}
+vif(lm(mtcars$qsec ~ mtcars$hp + mtcars$wt + mtcars$disp,
+                          data = mtcars))
+```
+Based on the Variance Inflation factor, we see each predictor variable is less than 10. There is no multicollinearity.
+
+# Final Model
+```{r}
+FinalModel <- lm(mtcars$qsec ~ mtcars$hp + mtcars$wt + mtcars$disp + sqHP,
+                         data = mtcars)
+summary(FinalModel)
+```
+We achieve an final ajusted R-squared value of 0.6755.
+
+$y  = 1.954e+01 -5.245e-02*x1 + 1.584e+00*x2 -4.380e-03*x3 + 7.356e-05*x4$
+
+```{r}
+resids <- FinalModel$residuals
+qqnorm(resids,main="Quantile-Quantile plot of Final Model")
+qqline(resids)
+```
+Based on the normal qqplot, we can see that the majority of the data points fall on the line with only 4 outliers on both ends of the graph showing the model is accurate predictor.
+
+
